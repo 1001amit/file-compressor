@@ -7,9 +7,14 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['COMPRESSED_FOLDER'] = 'compressed'
 app.config['SECRET_KEY'] = 'supersecretkey'
+app.config['ALLOWED_EXTENSIONS'] = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['COMPRESSED_FOLDER'], exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 @app.route('/')
 def index():
@@ -23,6 +28,11 @@ def compress():
             flash('No files selected for uploading', 'error')
             return redirect(url_for('index'))
 
+        for file in uploaded_files:
+            if not allowed_file(file.filename):
+                flash('File type not allowed', 'error')
+                return redirect(url_for('index'))
+
         zip_filename = os.path.join(app.config['COMPRESSED_FOLDER'], 'compressed.zip')
 
         with zipfile.ZipFile(zip_filename, 'w') as zipf:
@@ -32,6 +42,7 @@ def compress():
                 file.save(file_path)
                 zipf.write(file_path, filename)
 
+        flash('Files compressed successfully!', 'success')
         return send_file(zip_filename, as_attachment=True)
 
     except Exception as e:
@@ -40,3 +51,4 @@ def compress():
 
 if __name__ == '__main__':
     app.run(debug=True)
+

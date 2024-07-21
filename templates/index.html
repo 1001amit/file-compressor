@@ -51,6 +51,15 @@
                     <label for="files">Choose files to compress</label>
                     <input type="file" class="form-control" id="files" name="files[]" multiple>
                 </div>
+                <div class="form-group">
+                    <label for="compression-level">Choose compression level</label>
+                    <select class="form-control" id="compression-level" name="compression_level">
+                        <option value="ZIP_STORED">No Compression</option>
+                        <option value="ZIP_DEFLATED">Normal Compression</option>
+                        <option value="ZIP_BZIP2">High Compression (BZIP2)</option>
+                        <option value="ZIP_LZMA">Maximum Compression (LZMA)</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-primary btn-block">Compress</button>
             </form>
         </div>
@@ -84,6 +93,7 @@
                     form.reset();
                     document.querySelector('.progress-bar').style.width = '0%';
                     document.getElementById('progress-bar').style.display = 'none';
+                    alert('Files compressed successfully! Download will start shortly.');
                     window.location.href = xhr.responseURL;
                 }
             };
