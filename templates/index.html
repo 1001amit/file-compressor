@@ -5,10 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Compressor</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+        }
+        .header {
+            background-color: #343a40;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="text-center">File Compressor</h1>
+        <div class="header text-center">
+            <h1>File Compressor</h1>
+        </div>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="alert alert-dismissible fade show mt-3">
@@ -23,22 +45,49 @@
                 </div>
             {% endif %}
         {% endwith %}
-        <form id="compress-form" action="/compress" method="post" enctype="multipart/form-data" class="border p-4 rounded">
-            <div class="form-group">
-                <label for="files">Choose files to compress</label>
-                <input type="file" class="form-control" id="files" name="files[]" multiple>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Compress</button>
-        </form>
+        <div class="form-container mt-3">
+            <form id="compress-form" action="/compress" method="post" enctype="multipart/form-data" class="border p-4 rounded">
+                <div class="form-group">
+                    <label for="files">Choose files to compress</label>
+                    <input type="file" class="form-control" id="files" name="files[]" multiple>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Compress</button>
+            </form>
+        </div>
         <div id="loading-spinner" class="text-center mt-3" style="display: none;">
             <div class="spinner-border" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
         </div>
+        <div id="progress-bar" class="progress mt-3" style="display: none;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;"></div>
+        </div>
     </div>
     <script>
-        document.getElementById('compress-form').addEventListener('submit', function() {
+        document.getElementById('compress-form').addEventListener('submit', function(event) {
+            event.preventDefault();
             document.getElementById('loading-spinner').style.display = 'block';
+            document.getElementById('progress-bar').style.display = 'block';
+            const form = event.target;
+            const formData = new FormData(form);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action, true);
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    document.querySelector('.progress-bar').style.width = percentComplete + '%';
+                }
+            };
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    document.getElementById('loading-spinner').style.display = 'none';
+                    form.reset();
+                    document.querySelector('.progress-bar').style.width = '0%';
+                    document.getElementById('progress-bar').style.display = 'none';
+                    window.location.href = xhr.responseURL;
+                }
+            };
+            xhr.send(formData);
         });
     </script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
@@ -46,3 +95,4 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
+
